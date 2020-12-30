@@ -1,0 +1,12 @@
+*~
+*.pyc
+*.egg-info
+*.eggs
+*.cache
+.coverage
+build/*
+dist/*
+coverage.xml
+test-report.xml
+.tox
+venv*

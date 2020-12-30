@@ -1,0 +1,47 @@
+dist: xenial
+
+language: python
+
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+
+services:
+  - docker
+
+env:
+  - PYTHON_HYDRA_LOCAL=1
+
+cache: pip
+
+before_install:
+  - >
+    docker run -d
+    -p 4444:4444
+    -p 4445:4445
+    --name=hydra
+    -e DATABASE_URL=memory
+    --entrypoint=hydra
+    oryd/hydra:v1.0.0-rc.11
+    serve all --dangerous-force-http
+  - sleep 10
+  - >
+    docker run -it
+    -e HYDRA_ADMIN_URL=http://hydra:4445
+    --link=hydra:hydra
+    oryd/hydra:v1.0.0-rc.11
+    clients create --skip-tls-verify
+    --id client
+    --secret secret
+    --grant-types client_credentials,authorization_code
+    --response-types token,code
+    --scope hydra.keys.get,hydra.clients
+
+install: pip install tox python-coveralls
+
+script:
+  - tox -e $(echo py$TRAVIS_PYTHON_VERSION | tr -d .)
+
+after_success:
+  - coveralls
